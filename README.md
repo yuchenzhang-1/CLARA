@@ -271,8 +271,6 @@ This will:
 - Evaluate performance on test data
 
 ---
-##  Datasets
-
 ## Datasets
 
 The datasets used in this study can be accessed from their official repositories:
