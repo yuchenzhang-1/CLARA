@@ -270,4 +270,15 @@ This will:
 - Train the CLARA model
 - Evaluate performance on test data
 
+---
+##  Datasets
 
+## Datasets
+
+The datasets used in this study can be accessed from their official repositories:
+
+- **HateMM:** https://github.com/hate-alert/HateMM
+- **MultiHateClip:** https://github.com/Social-AI-Studio/MultiHateClip
+- **DeHate:** https://github.com/Multimodal-Intelligence-Lab-MIL/DeHate
+
+Please follow the respective dataset licences and access requirements provided by the original authors.
