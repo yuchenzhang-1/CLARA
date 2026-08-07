@@ -1,6 +1,19 @@
 # CLARA: Clip-Level Multimodal Alignment with VLM-Derived Rationales for Hateful Video Detection
 
-This is the official implementation of **CLARA**: Clip-Level Multimodal Alignment with VLM-Derived Rationales for Hateful Video Detection.
+## ⚠️ Ethics Statement
+
+**This repository contains sensitive content that may be disturbing to some readers.**
+
+
+The videos and data provided for annotation in this project have been sourced from publicly accessible social media platforms in compliance with all applicable laws and regulations. 
+
+The content within these videos does not reflect the opinions, beliefs, or viewpoints of the research group or its members.
+
+This dataset is intended solely for research purposes and must be treated with strict confidentiality. No personally identifiable information is included, and all procedures align with relevant legal and ethical standards.
+
+---
+
+This is the official implementation of **CLARA**: Clip-Level Multimodal Alignment with VLM-Derived Rationales for Hateful Video Detection (MM'26).
 
 ---
 
