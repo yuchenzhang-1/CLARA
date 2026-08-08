@@ -11,6 +11,7 @@ This is the official implementation of **CLARA**: Clip-Level Multimodal Alignmen
 </a>
 
 </div>
+
 ---
 
 ##  Project Structure
