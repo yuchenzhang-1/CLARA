@@ -33,7 +33,12 @@ class DataArguments:
         default=100,
         metadata={"help": "Max clips kept per video in Dataset (before collator). Large number disables truncation."},
     )
-
+    
+    clip_microbatch_size: int = field(
+        default=0,
+        metadata={"help": "Split clips within each video into microbatches. 0 disables."},
+    )
+    
     clip_select: Literal["truncate", "uniform", "random"] = field(
         default="truncate",
         metadata={"help": "How to choose K clips if a video has more than max_clips_per_video."},
