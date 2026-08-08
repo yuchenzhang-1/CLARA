@@ -2,7 +2,7 @@
 
 ---
 
-This is the official implementation of **CLARA**: Clip-Level Multimodal Alignment with VLM-Derived Rationales for Hateful Video Detection. The paper has been accepted at ACM Multimedia 2026.
+This is the official implementation of **CLARA**: Clip-Level Multimodal Alignment with VLM-Derived Rationales for Hateful Video Detection. (MM'26)
 
 <div align="center">
 
@@ -260,10 +260,6 @@ This will:
 
 ---
 
-
-## Supplementary Material
-
-Additional implementation details, prompting strategies, parameter analyses, and supplementary experimental results are provided in the Supplementary_Material.pdf.
 
 ---
 ## Datasets
