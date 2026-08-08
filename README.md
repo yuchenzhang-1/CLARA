@@ -42,7 +42,7 @@ CLARA consists of three key components:
 - **Clip-level MoE-based Multimodal Encoding**  
   Flexible alignment of audio, visual, and textual modalities.
 
-- **Local–Global Contrastive Learning**  
+- **Local-Global Contrastive Learning**  
   Captures temporal consistency between short and long segments.
 
 - **Rationale-Guided Transformer**  
