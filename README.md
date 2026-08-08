@@ -267,9 +267,6 @@ This will:
 ---
 
 
-## Supplementary Material
-
-Additional implementation details, prompting strategies, parameter analyses, and supplementary experimental results are provided in the Supplementary_Material.pdf.
 
 ---
 ## Datasets
