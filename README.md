@@ -6,46 +6,19 @@ This is the official implementation of **CLARA**: Clip-Level Multimodal Alignmen
 
 ---
 
-<div align="center">
-
-<table>
-  <tr>
-    <td bgcolor="#111820" style="padding: 18px 28px;">
-      <a href="https://yuchenzhang-1.github.io/CLARA/">
-        <font size="5" color="white"><b>CLICK HERE TO VIEW THE PROJECT PAGE</b></font>
-      </a>
-    </td>
-    <td bgcolor="#bb3e4a" style="padding: 18px 24px;">
-      <a href="https://yuchenzhang-1.github.io/CLARA/">
-        <font size="5" color="white"><b>CLARA</b></font>
-      </a>
-    </td>
-  </tr>
-</table>
-
-</div>
-
-
 
 <div align="center">
 
-## CLARA
-
-<a href="https://yuchenzhang-1.github.io/CLARA/">
-  <img src="https://img.shields.io/badge/CLICK%20HERE%20TO%20VIEW%20THE%20PROJECT%20PAGE-CLARA-bb3e4a?style=for-the-badge&labelColor=111820" height="64">
-</a>
+# [CLICK HERE TO VIEW THE CLARA PROJECT PAGE](https://yuchenzhang-1.github.io/CLARA/)
 
 </div>
 
 
 <div align="center">
 
-# [View the Full CLARA Project Page](https://yuchenzhang-1.github.io/CLARA/)
+# <a href="https://yuchenzhang-1.github.io/CLARA/"><font color="#bb3e4a">CLICK HERE TO VIEW THE CLARA PROJECT PAGE</font></a>
 
 </div>
-
-
-
 
 ---
 ##  Project Structure
