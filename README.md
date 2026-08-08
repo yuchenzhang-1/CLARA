@@ -265,6 +265,13 @@ This will:
 - Evaluate performance on test data
 
 ---
+
+
+## Supplementary Material
+
+Additional implementation details, prompting strategies, parameter analyses, and supplementary experimental results are provided in the Supplementary_Material.pdf.
+
+---
 ## Datasets
 
 The datasets used in this study can be accessed from their official repositories:
