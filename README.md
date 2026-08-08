@@ -6,21 +6,6 @@ This is the official implementation of **CLARA**: Clip-Level Multimodal Alignmen
 
 ---
 
-## Overview
-
-CLARA consists of three key components:
-
-- **Clip-level MoE-based Multimodal Encoding**  
-  Flexible alignment of audio, visual, and textual modalities.
-
-- **Local–Global Contrastive Learning**  
-  Captures temporal consistency between short and long segments.
-
-- **Rationale-Guided Transformer**  
-  Enhances semantic understanding using VLM-generated rationales.
-
----
-
 ##  Project Structure
 
 ```bash
@@ -48,6 +33,20 @@ CLARA/
 ├── Supplementary_Material.pdf
 └── README.md
 ```
+---
+
+## Overview
+
+CLARA consists of three key components:
+
+- **Clip-level MoE-based Multimodal Encoding**  
+  Flexible alignment of audio, visual, and textual modalities.
+
+- **Local–Global Contrastive Learning**  
+  Captures temporal consistency between short and long segments.
+
+- **Rationale-Guided Transformer**  
+  Enhances semantic understanding using VLM-generated rationales.
 
 ---
 
