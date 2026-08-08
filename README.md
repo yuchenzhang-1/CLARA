@@ -45,6 +45,7 @@ CLARA/
 ├── utils/
 ├── main.py
 ├── run_clara.sh
+├── Supplementary_Material.pdf
 └── README.md
 ```
 
