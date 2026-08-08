@@ -5,7 +5,9 @@
 This is the official implementation of **CLARA**: Clip-Level Multimodal Alignment with VLM-Derived Rationales for Hateful Video Detection (MM'26).
 
 ---
+##  Project Page: https://yuchenzhang-1.github.io/CLARA/
 
+---
 ##  Project Structure
 
 ```bash
