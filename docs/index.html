@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CLARA | Clip-Level Multimodal Alignment</title>
+    <meta
+      name="description"
+      content="CLARA: Clip-Level Multimodal Alignment with VLM-Derived Rationales for Hateful Video Detection."
+    >
+    <link rel="stylesheet" href="assets/style.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav">
+        <a href="#motivation">Motivation</a>
+        <a href="#method">Method</a>
+        <a href="#results">Results</a>
+        <a href="#code">Code</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <h1>CLARA</h1>
+        <p class="subtitle">
+          Clip-Level Multimodal Alignment with VLM-Derived Rationales for
+          Hateful Video Detection
+        </p>
+
+        <p class="authors">
+          Yuchen Zhang · Shuang Dai · Zeyu Fu · Yunfei Long · Ravi Shekhar ·
+          Haralambos Mouratidis
+        </p>
+
+        <p class="affiliations">
+          University of Essex · University of Exeter · Queen Mary University of London
+        </p>
+
+        <p class="venue">Paper accepted at ACM Multimedia 2026</p>
+
+        <div class="actions" aria-label="Project links">
+          <a class="button primary" href="CLARA_camera_ready.pdf">Paper</a>
+          <a class="button" href="https://github.com/yuchenzhang-1/CLARA">Code</a>
+        </div>
+
+        <p class="notice">
+          Content note: this project studies hateful video detection and may
+          discuss sensitive material. Please follow the original dataset
+          licenses, platform terms, and ethical review constraints.
+        </p>
+      </section>
+
+      <section id="motivation" class="section">
+        <h2>Motivation</h2>
+        <figure class="paper-figure motivation-figure">
+          <img
+            src="assets/source_figures/Fig1.png"
+            alt="Hateful meaning emerges progressively across clips"
+          >
+        </figure>
+
+        <p class="motivation-text">
+          Hateful video detection is challenging because hateful meaning often
+          emerges from <strong>brief, implicit, and temporally dependent
+          interactions</strong> among speech, audio, text, and visual content. A
+          single frame or a single utterance can look neutral in isolation,
+          while the hateful meaning becomes clear only after
+          <strong>contextual buildup across multiple clips</strong>.
+        </p>
+      </section>
+
+      <section id="method" class="section">
+        <h2>Method</h2>
+        <p>
+          CLARA first segments videos into utterance-aligned clips, extracts
+          multimodal features, fuses them with a Mixture-of-Experts clip
+          encoder, learns local-global temporal consistency, and integrates
+          VLM-derived rationales through a rationale-gated Transformer.
+        </p>
+
+        <figure class="paper-figure">
+          <img
+            src="assets/source_figures/Framework.png"
+            alt="Overall framework of CLARA"
+          >
+        </figure>
+
+        <div class="method-grid">
+          <article>
+            <span class="step">01</span>
+            <h3>Utterance-Aligned Clips</h3>
+            <p>
+              Whisper timestamps define semantically coherent clip boundaries
+              and preserve temporally localized hateful cues.
+            </p>
+          </article>
+          <article>
+            <span class="step">02</span>
+            <h3>MoE Clip Encoder</h3>
+            <p>
+              Audio, visual, transcript, and OCR representations are routed
+              through a sparse expert encoder.
+            </p>
+          </article>
+          <article>
+            <span class="step">03</span>
+            <h3>Local-Global Contrast</h3>
+            <p>
+              Short local segments are aligned with longer global segments from
+              the same video and separated from other videos.
+            </p>
+          </article>
+          <article>
+            <span class="step">04</span>
+            <h3>VLM Rationale Generation</h3>
+            <p>
+              A VLM generates structured video-level rationales from sampled
+              frames, title, and transcription.
+            </p>
+          </article>
+          <article>
+            <span class="step">05</span>
+            <h3>Gated Transformer</h3>
+            <p>
+              Clip and rationale representations are gated and aggregated into
+              the final video representation.
+            </p>
+          </article>
+        </div>
+
+        <h3 class="subhead">VLM Rationale Generation</h3>
+        <p>
+          For each video, CLARA generates a structured rationale from uniformly
+          sampled frames, the video title, and the full transcription when
+          available.
+        </p>
+
+        <ul class="rationale-steps">
+          <li>
+            <strong>Objective analysis:</strong> the VLM describes visual
+            content, summarizes text, and explains cross-modal relations without
+            making a hatefulness judgment.
+          </li>
+          <li>
+            <strong>Hateful content verification:</strong> the VLM uses the
+            original inputs and objective analysis to decide hate or non-hate,
+            explicitness, confidence, reasons, and notes.
+          </li>
+          <li>
+            <strong>Structured rationale:</strong> the final rationale is
+            normalized into eight fields and encoded for rationale-guided video
+            aggregation.
+          </li>
+        </ul>
+
+        <div class="prompt-grid">
+          <article class="prompt-card">
+            <h3>Step 1 Prompt: Objective Analysis</h3>
+            <pre><code># Role
+You are a professional video content verifier. Your task is to accurately summarize what the video shows and what the accompanying text conveys in an objective and neutral way.
+
+# Instructions
+You may use:
+(1) 20 frames sampled uniformly in temporal order.
+(2) Video title (if available) and full transcription.
+
+You need to:
+(1) Describe what is visible in the frames.
+(2) Summarize the key messages conveyed by the text.
+(3) Provide an overall objective summary combining visual and textual evidence.
+(4) Describe how the visuals and the text relate.
+
+Return ONLY the following tagged format (no extra text before or after). Use the tag names exactly:
+
+# Output Format
+VISUAL_DESCRIPTION: Neutral description of visible scenes, objects, actions, and symbols. Avoid guessing details that are not supported by the frames.
+TEXTUAL_DESCRIPTION: Neutral summary of the title and transcription. Avoid guessing details that are not supported by the text.
+CONTENT_SUMMARY: Overall summary combining visual and textual evidence.
+CROSS_MODAL_RELATION: One label from {aligned, complementary, conflicting, unclear}.
+CROSS_MODAL_EXPLANATION: Briefly explain why that label fits, focusing on whether the visuals support, add context to, contradict, or do not clarify the text evidence.
+CONTEXT_ELEMENTS: List of key contextual elements that help interpret the content.
+
+# Textual Input
+VIDEO_TITLE: {video_title}
+TRANSCRIPTION: {transcription}</code></pre>
+          </article>
+
+          <article class="prompt-card">
+            <h3>Step 2 Prompt: Hateful Content Verification</h3>
+            <pre><code># Role
+You are a professional content verifier conducting hateful content analysis. Your task is to make a careful, evidence-based judgment using the information provided.
+
+# Instructions
+You may use:
+(1) 20 frames sampled uniformly in temporal order.
+(2) video title and full transcription.
+(3) The objective analysis of the video provided below.
+
+You need to:
+(1) Decide whether the video content is hateful or non-hateful.
+(2) If hateful, indicate whether it is explicit or implicit.
+(3) List the main reasons that support your decision, focusing on observable or stated evidence rather than speculation.
+
+Return ONLY the following tagged format (no extra text before or after). Use the tag names exactly:
+
+# Output Format
+LABEL: &lt;hate | non-hate&gt;
+EXPLICITNESS: &lt;explicit | implicit | na&gt;
+CONFIDENCE: &lt;high|medium|low&gt;
+REASONS: &lt;reason 1&gt;, &lt;reason 2&gt;, ...
+NOTES: &lt;any brief clarifications or assumptions, if needed.&gt;
+
+# Textual Information
+VIDEO_TITLE: {video_title}
+TRANSCRIPTION: {transcription}
+OBJECTIVE ANALYSIS: {objective_analysis}</code></pre>
+          </article>
+
+          <article class="prompt-card schema-card">
+            <h3>Rationale Representation</h3>
+            <p>
+              The two prompt outputs are normalized into eight textual fields
+              before rationale-guided video aggregation.
+            </p>
+            <dl class="schema-list">
+              <div>
+                <dt>Content summary</dt>
+                <dd>CONTENT_SUMMARY from Step 1.</dd>
+              </div>
+              <div>
+                <dt>Visual description</dt>
+                <dd>VISUAL_DESCRIPTION from Step 1.</dd>
+              </div>
+              <div>
+                <dt>Textual description</dt>
+                <dd>TEXTUAL_DESCRIPTION from Step 1.</dd>
+              </div>
+              <div>
+                <dt>Cross-modal relation</dt>
+                <dd>CROSS_MODAL_RELATION plus CROSS_MODAL_EXPLANATION.</dd>
+              </div>
+              <div>
+                <dt>Contextual elements</dt>
+                <dd>CONTEXT_ELEMENTS converted into a compact sentence.</dd>
+              </div>
+              <div>
+                <dt>Final decision</dt>
+                <dd>LABEL, EXPLICITNESS, and CONFIDENCE from Step 2.</dd>
+              </div>
+              <div>
+                <dt>Reasons</dt>
+                <dd>REASONS from Step 2.</dd>
+              </div>
+              <div>
+                <dt>Notes</dt>
+                <dd>NOTES from Step 2.</dd>
+              </div>
+            </dl>
+          </article>
+        </div>
+      </section>
+
+      <section id="results" class="section">
+        <h2>Results</h2>
+        <p>
+          CLARA achieves the strongest performance across HateMM, MHC_CN,
+          MHC_EN, and DeHate under 5-fold cross-validation. Compared with the
+          second-best method, CLARA improves by 2.4 to 5.3 percentage points
+          (pp) in Acc, 2.7 to 7.4 pp in M-F1, 0.3 to 3.9 pp in M-Pre, and 2.2
+          to 9.7 pp in M-Rec across datasets.
+        </p>
+
+        <div class="metric-strip">
+          <div>
+            <span>HateMM M-F1</span>
+            <strong>0.872</strong>
+            <em>+3.9 pp vs second-best</em>
+          </div>
+          <div>
+            <span>MHC_CN M-F1</span>
+            <strong>0.734</strong>
+            <em>+2.7 pp vs second-best</em>
+          </div>
+          <div>
+            <span>MHC_EN M-F1</span>
+            <strong>0.727</strong>
+            <em>+7.4 pp vs second-best</em>
+          </div>
+          <div>
+            <span>DeHate M-F1</span>
+            <strong>0.659</strong>
+            <em>+3.3 pp vs second-best</em>
+          </div>
+        </div>
+
+        <h3 class="subhead">Table 1: Overall Performance</h3>
+        <p>
+          Mean and standard deviation are reported over 5 folds. Bold indicates
+          the best result and underlined values indicate the second-best result.
+          <sup>&dagger;</sup> denotes paired t-test significance at p &lt; 0.05
+          against MoRE, HVGuard, and MM-HSD.
+        </p>
+
+        <div class="table2-wrap">
+          <table class="paper-table">
+            <thead>
+              <tr>
+                <th rowspan="2">Method</th>
+                <th colspan="2">HateMM</th>
+                <th colspan="2">MHC_CN</th>
+                <th colspan="2">MHC_EN</th>
+                <th colspan="2">DeHate</th>
+              </tr>
+              <tr>
+                <th>Acc</th><th>M-F1</th>
+                <th>Acc</th><th>M-F1</th>
+                <th>Acc</th><th>M-F1</th>
+                <th>Acc</th><th>M-F1</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><th>BERT</th><td>0.724 ± 0.028</td><td>0.709 ± 0.032</td><td>0.696 ± 0.006</td><td>0.635 ± 0.019</td><td>0.674 ± 0.010</td><td>0.417 ± 0.020</td><td>0.651 ± 0.006</td><td>0.522 ± 0.030</td></tr>
+              <tr><th>Roberta</th><td>0.729 ± 0.014</td><td>0.718 ± 0.025</td><td>0.671 ± 0.003</td><td>0.402 ± 0.001</td><td>0.672 ± 0.002</td><td>0.402 ± 0.001</td><td>0.683 ± 0.000</td><td>0.406 ± 0.000</td></tr>
+              <tr><th>MFCC</th><td>0.653 ± 0.048</td><td>0.598 ± 0.066</td><td>0.646 ± 0.014</td><td>0.511 ± 0.020</td><td>0.656 ± 0.018</td><td>0.463 ± 0.031</td><td>0.677 ± 0.003</td><td>0.441 ± 0.030</td></tr>
+              <tr><th>Wav2vec</th><td>0.696 ± 0.013</td><td>0.678 ± 0.016</td><td>0.675 ± 0.003</td><td>0.403 ± 0.001</td><td>0.674 ± 0.008</td><td>0.403 ± 0.003</td><td>0.683 ± 0.001</td><td>0.407 ± 0.001</td></tr>
+              <tr><th>ViT</th><td>0.700 ± 0.031</td><td>0.699 ± 0.031</td><td>0.701 ± 0.007</td><td>0.553 ± 0.024</td><td>0.678 ± 0.014</td><td>0.438 ± 0.026</td><td>0.685 ± 0.010</td><td>0.542 ± 0.018</td></tr>
+              <tr><th>ViViT</th><td>0.718 ± 0.012</td><td>0.702 ± 0.020</td><td>0.673 ± 0.032</td><td>0.558 ± 0.030</td><td>0.688 ± 0.019</td><td>0.546 ± 0.037</td><td>0.687 ± 0.004</td><td>0.542 ± 0.022</td></tr>
+              <tr><th>LLaVA</th><td>0.688 ± 0.013</td><td>0.439 ± 0.015</td><td>0.669 ± 0.003</td><td>0.401 ± 0.001</td><td>0.673 ± 0.003</td><td>0.402 ± 0.001</td><td>0.687 ± 0.002</td><td>0.415 ± 0.007</td></tr>
+              <tr><th>Qwen3VL</th><td>0.738 ± 0.035</td><td>0.727 ± 0.035</td><td>0.709 ± 0.041</td><td>0.597 ± 0.074</td><td>0.708 ± 0.014</td><td>0.588 ± 0.027</td><td>0.657 ± 0.013</td><td>0.595 ± 0.012</td></tr>
+              <tr><th>HateMM*</th><td>0.771 ± 0.033</td><td>0.770 ± 0.033</td><td>0.739 ± 0.035</td><td>0.668 ± 0.046</td><td>0.678 ± 0.022</td><td>0.542 ± 0.030</td><td>0.695 ± 0.021</td><td>0.613 ± 0.016</td></tr>
+              <tr><th>MHC*</th><td>0.793 ± 0.023</td><td>0.782 ± 0.023</td><td>0.738 ± 0.020</td><td>0.669 ± 0.030</td><td>0.688 ± 0.031</td><td>0.600 ± 0.047</td><td>0.688 ± 0.017</td><td>0.622 ± 0.016</td></tr>
+              <tr><th>DeHate*</th><td>0.754 ± 0.037</td><td>0.736 ± 0.044</td><td>0.688 ± 0.009</td><td>0.595 ± 0.022</td><td>0.675 ± 0.034</td><td>0.554 ± 0.053</td><td>0.679 ± 0.015</td><td>0.590 ± 0.006</td></tr>
+              <tr><th>MoRE</th><td>0.813 ± 0.030</td><td>0.803 ± 0.032</td><td>0.691 ± 0.018</td><td>0.539 ± 0.108</td><td>0.697 ± 0.017</td><td>0.584 ± 0.070</td><td><span class="second">0.711 ± 0.011</span></td><td>0.616 ± 0.027</td></tr>
+              <tr><th>HVGuard</th><td>0.815 ± 0.026</td><td>0.813 ± 0.027</td><td><span class="second">0.754 ± 0.024</span></td><td><span class="second">0.707 ± 0.046</span></td><td><span class="second">0.710 ± 0.030</span></td><td>0.632 ± 0.034</td><td>0.707 ± 0.003</td><td>0.586 ± 0.034</td></tr>
+              <tr><th>MM-HSD</th><td><span class="second">0.839 ± 0.028</span></td><td><span class="second">0.833 ± 0.029</span></td><td>0.683 ± 0.016</td><td>0.654 ± 0.019</td><td>0.688 ± 0.017</td><td><span class="second">0.653 ± 0.017</span></td><td>0.689 ± 0.018</td><td><span class="second">0.626 ± 0.015</span></td></tr>
+              <tr class="best"><th>CLARA</th><td>0.879<sup>&dagger;</sup> ± 0.022</td><td>0.872<sup>&dagger;</sup> ± 0.024</td><td>0.779<sup>&dagger;</sup> ± 0.016</td><td>0.734<sup>&dagger;</sup> ± 0.026</td><td>0.763<sup>&dagger;</sup> ± 0.035</td><td>0.727<sup>&dagger;</sup> ± 0.042</td><td>0.735<sup>&dagger;</sup> ± 0.009</td><td>0.659<sup>&dagger;</sup> ± 0.012</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table2-wrap">
+          <table class="paper-table">
+            <thead>
+              <tr>
+                <th rowspan="2">Method</th>
+                <th colspan="2">HateMM</th>
+                <th colspan="2">MHC_CN</th>
+                <th colspan="2">MHC_EN</th>
+                <th colspan="2">DeHate</th>
+              </tr>
+              <tr>
+                <th>M-Pre</th><th>M-Rec</th>
+                <th>M-Pre</th><th>M-Rec</th>
+                <th>M-Pre</th><th>M-Rec</th>
+                <th>M-Pre</th><th>M-Rec</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><th>BERT</th><td>0.719 ± 0.030</td><td>0.705 ± 0.033</td><td>0.697 ± 0.014</td><td>0.629 ± 0.016</td><td>0.475 ± 0.196</td><td>0.503 ± 0.004</td><td>0.617 ± 0.012</td><td>0.543 ± 0.019</td></tr>
+              <tr><th>Roberta</th><td>0.722 ± 0.024</td><td>0.703 ± 0.027</td><td>0.336 ± 0.001</td><td>0.500 ± 0.000</td><td>0.336 ± 0.001</td><td>0.500 ± 0.000</td><td>0.342 ± 0.000</td><td>0.500 ± 0.000</td></tr>
+              <tr><th>MFCC</th><td>0.653 ± 0.085</td><td>0.608 ± 0.052</td><td>0.550 ± 0.027</td><td>0.528 ± 0.015</td><td>0.536 ± 0.046</td><td>0.512 ± 0.012</td><td>0.527 ± 0.036</td><td>0.508 ± 0.010</td></tr>
+              <tr><th>Wav2vec</th><td>0.688 ± 0.016</td><td>0.676 ± 0.017</td><td>0.337 ± 0.002</td><td>0.500 ± 0.000</td><td>0.338 ± 0.003</td><td>0.498 ± 0.003</td><td>0.542 ± 0.245</td><td>0.500 ± 0.001</td></tr>
+              <tr><th>ViT</th><td>0.701 ± 0.033</td><td>0.699 ± 0.031</td><td>0.669 ± 0.011</td><td>0.570 ± 0.014</td><td>0.644 ± 0.195</td><td>0.512 ± 0.010</td><td>0.610 ± 0.023</td><td>0.555 ± 0.012</td></tr>
+              <tr><th>ViViT</th><td>0.711 ± 0.011</td><td>0.703 ± 0.022</td><td>0.619 ± 0.054</td><td>0.566 ± 0.024</td><td>0.634 ± 0.044</td><td>0.563 ± 0.026</td><td>0.615 ± 0.009</td><td>0.556 ± 0.013</td></tr>
+              <tr><th>LLaVA</th><td>0.678 ± 0.120</td><td>0.513 ± 0.009</td><td>0.335 ± 0.001</td><td>0.498 ± 0.002</td><td>0.337 ± 0.001</td><td>0.500 ± 0.000</td><td>0.527 ± 0.091</td><td>0.501 ± 0.003</td></tr>
+              <tr><th>Qwen3VL</th><td>0.726 ± 0.035</td><td>0.736 ± 0.036</td><td>0.705 ± 0.088</td><td>0.605 ± 0.057</td><td><span class="second">0.729 ± 0.029</span></td><td>0.589 ± 0.020</td><td>0.598 ± 0.013</td><td>0.593 ± 0.011</td></tr>
+              <tr><th>HateMM*</th><td>0.772 ± 0.035</td><td>0.771 ± 0.033</td><td>0.706 ± 0.051</td><td>0.659 ± 0.042</td><td>0.624 ± 0.053</td><td>0.557 ± 0.016</td><td>0.639 ± 0.029</td><td>0.608 ± 0.015</td></tr>
+              <tr><th>MHC*</th><td>0.788 ± 0.025</td><td>0.779 ± 0.021</td><td>0.704 ± 0.026</td><td>0.660 ± 0.027</td><td>0.630 ± 0.043</td><td>0.600 ± 0.038</td><td>0.631 ± 0.020</td><td>0.618 ± 0.015</td></tr>
+              <tr><th>DeHate*</th><td>0.748 ± 0.039</td><td>0.733 ± 0.045</td><td>0.635 ± 0.013</td><td>0.595 ± 0.017</td><td>0.605 ± 0.069</td><td>0.563 ± 0.043</td><td>0.614 ± 0.014</td><td>0.588 ± 0.006</td></tr>
+              <tr><th>MoRE</th><td>0.806 ± 0.032</td><td>0.801 ± 0.034</td><td>0.588 ± 0.146</td><td>0.572 ± 0.065</td><td>0.653 ± 0.027</td><td>0.595 ± 0.052</td><td><span class="second">0.668 ± 0.027</span></td><td>0.614 ± 0.023</td></tr>
+              <tr><th>HVGuard</th><td>0.811 ± 0.026</td><td>0.814 ± 0.028</td><td><span class="second">0.725 ± 0.031</span></td><td><span class="second">0.707 ± 0.056</span></td><td>0.672 ± 0.062</td><td>0.628 ± 0.032</td><td>0.657 ± 0.006</td><td>0.590 ± 0.026</td></tr>
+              <tr><th>MM-HSD</th><td><span class="second">0.835 ± 0.030</span></td><td><span class="second">0.833 ± 0.029</span></td><td>0.652 ± 0.019</td><td>0.662 ± 0.023</td><td>0.652 ± 0.017</td><td><span class="second">0.658 ± 0.019</span></td><td>0.654 ± 0.013</td><td><span class="second">0.626 ± 0.016</span></td></tr>
+              <tr class="best"><th>CLARA</th><td>0.874<sup>&dagger;</sup> ± 0.022</td><td>0.872<sup>&dagger;</sup> ± 0.028</td><td>0.760<sup>&dagger;</sup> ± 0.030</td><td>0.726<sup>&dagger;</sup> ± 0.032</td><td>0.732<sup>&dagger;</sup> ± 0.041</td><td>0.725<sup>&dagger;</sup> ± 0.043</td><td>0.697<sup>&dagger;</sup> ± 0.016</td><td>0.650<sup>&dagger;</sup> ± 0.011</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="subhead">Parameter Analysis</h3>
+        <p>
+          Each dataset is analyzed with the same four views: (a) MoE
+          configuration, including the number of experts and top-k routing. (b)
+          local and global temporal ratios used in contrastive learning. (c)
+          contrastive loss weight. (d) total frame budget.
+        </p>
+
+        <figure class="paper-figure figure-tight">
+          <div class="dataset-analysis">
+            <section>
+              <h3>HateMM</h3>
+              <div class="source-figure-grid four">
+                <img src="assets/source_figures/HateMM_moe_heatmap.png" alt="HateMM MoE heatmap">
+                <img src="assets/source_figures/HateMM_lg_heatmap.png" alt="HateMM local-global ratio heatmap">
+                <img src="assets/source_figures/HateMM_cl_weight.png" alt="HateMM contrastive learning weight curve">
+                <img src="assets/source_figures/HateMM_budget.png" alt="HateMM frame budget curve">
+              </div>
+            </section>
+            <section>
+              <h3>MHC_CN</h3>
+              <div class="source-figure-grid four">
+                <img src="assets/source_figures/MHC_CN_heatmap_moe.png" alt="MHC_CN MoE heatmap">
+                <img src="assets/source_figures/MHC_CN_heatmap_lgratio.png" alt="MHC_CN local-global ratio heatmap">
+                <img src="assets/source_figures/MHC_CN_cl_weight_curve.png" alt="MHC_CN contrastive learning weight curve">
+                <img src="assets/source_figures/MHC_CN_budget_curve.png" alt="MHC_CN frame budget curve">
+              </div>
+            </section>
+            <section>
+              <h3>MHC_EN</h3>
+              <div class="source-figure-grid four">
+                <img src="assets/source_figures/MHC_EN_heatmap_moe.png" alt="MHC_EN MoE heatmap">
+                <img src="assets/source_figures/MHC_EN_heatmap_lgratio.png" alt="MHC_EN local-global ratio heatmap">
+                <img src="assets/source_figures/MHC_EN_cl_weight_curve.png" alt="MHC_EN contrastive learning weight curve">
+                <img src="assets/source_figures/MHC_EN_budget_curve.png" alt="MHC_EN frame budget curve">
+              </div>
+            </section>
+            <section>
+              <h3>DeHate</h3>
+              <div class="source-figure-grid four">
+                <img src="assets/source_figures/DeHate_heatmap_moe.png" alt="DeHate MoE heatmap">
+                <img src="assets/source_figures/DeHate_heatmap_lgratio.png" alt="DeHate local-global ratio heatmap">
+                <img src="assets/source_figures/DeHate_cl_weight_curve.png" alt="DeHate contrastive learning weight curve">
+                <img src="assets/source_figures/DeHate_budget_curve.png" alt="DeHate frame budget curve">
+              </div>
+            </section>
+          </div>
+        </figure>
+
+        <p class="analysis-note">
+          Across datasets, CLARA shows a consistent pattern: moderate MoE
+          capacity is more effective than very small or overly large expert
+          pools. Local cues work best when paired with broader global context.
+          Contrastive learning helps most at a balanced weight around 0.3-0.4.
+          Increasing the frame budget does not monotonically improve
+          performance once the key multimodal evidence has been captured.
+        </p>
+
+        <h3 class="subhead">MoE Routing Analysis</h3>
+        <p>
+          We compare two routing statistics to understand how the MoE module
+          allocates computation across experts. <strong>Gate</strong> denotes
+          the raw routing probability before sparsification, reflecting the
+          router's initial preference over all experts. <strong>Top-k</strong>
+          denotes the effective routing probability after retaining and
+          renormalizing only the selected experts, representing actual expert
+          usage during inference.
+        </p>
+        <p>
+          Across datasets, gate probabilities remain relatively balanced, while
+          top-k distributions become much more uneven. This suggests that CLARA
+          keeps multiple experts active as candidates, then uses sparse routing
+          to form dataset-specific expert specialization patterns. MHC_CN shows
+          the strongest concentration, MHC_EN is more distributed, and DeHate
+          lies between these two cases.
+        </p>
+        <div class="routing-grid">
+          <figure class="paper-figure">
+            <h3>HateMM</h3>
+            <div class="source-figure-grid two">
+              <img src="assets/source_figures/gate_distribution.png" alt="HateMM gate distribution">
+              <img src="assets/source_figures/topk_distribution.png" alt="HateMM top-k distribution">
+            </div>
+          </figure>
+          <figure class="paper-figure">
+            <h3>MHC_CN</h3>
+            <div class="source-figure-grid two">
+              <img src="assets/source_figures/MHC_CN_gate_distribution.png" alt="MHC_CN gate distribution">
+              <img src="assets/source_figures/MHC_CN_topk_distribution.png" alt="MHC_CN top-k distribution">
+            </div>
+          </figure>
+          <figure class="paper-figure">
+            <h3>MHC_EN</h3>
+            <div class="source-figure-grid two">
+              <img src="assets/source_figures/MHC_EN_gate_distribution.png" alt="MHC_EN gate distribution">
+              <img src="assets/source_figures/MHC_EN_topk_distribution.png" alt="MHC_EN top-k distribution">
+            </div>
+          </figure>
+          <figure class="paper-figure">
+            <h3>DeHate</h3>
+            <div class="source-figure-grid two">
+              <img src="assets/source_figures/DeHate_gate_distribution.png" alt="DeHate gate distribution">
+              <img src="assets/source_figures/DeHate_topk_distribution.png" alt="DeHate top-k distribution">
+            </div>
+          </figure>
+        </div>
+
+        <h3 class="subhead">Component Variants</h3>
+        <div class="analysis-grid">
+          <article class="paper-figure">
+            <h3>Text Encoder Variants</h3>
+            <div class="compact-table">
+              <div class="table-head">Dataset</div>
+              <div class="table-head">Best M-F1</div>
+              <div class="table-head">Best Encoder</div>
+              <strong>HateMM</strong><span>0.872</span><span>BERT</span>
+              <strong>MHC_CN</strong><span>0.736</span><span>Qwen 0.6B</span>
+              <strong>MHC_EN</strong><span>0.727</span><span>BERT</span>
+              <strong>DeHate</strong><span>0.662</span><span>Qwen 0.6B</span>
+            </div>
+          </article>
+          <article class="paper-figure">
+            <h3>Rationale Generator Variants</h3>
+            <div class="compact-table">
+              <div class="table-head">Dataset</div>
+              <div class="table-head">LLaVA M-F1</div>
+              <div class="table-head">Qwen3VL M-F1</div>
+              <strong>HateMM</strong><span>0.8443</span><span>0.8720</span>
+              <strong>MHC_CN</strong><span>0.6673</span><span>0.7340</span>
+              <strong>MHC_EN</strong><span>0.6898</span><span>0.7270</span>
+              <strong>DeHate</strong><span>0.6103</span><span>0.6590</span>
+            </div>
+          </article>
+        </div>
+
+      </section>
+
+      <section id="code" class="section">
+        <h2>Code</h2>
+        <p>
+          The repository contains the full CLARA preprocessing, feature
+          extraction, rationale generation, training, and evaluation pipeline.
+          The workflow follows the same order as the README.
+        </p>
+
+        <div class="code-block">
+          <span class="code-label">Pipeline</span>
+          <pre class="pipeline-block"><code>Raw video
+  -> audio extraction and Whisper transcription
+  -> utterance-aligned clip metadata
+  -> clip-level frames and OCR text
+  -> VLM-derived rationales
+  -> clip-level multimodal embeddings
+  -> CLARA training and evaluation</code></pre>
+        </div>
+
+        <div class="code-steps">
+          <article>
+            <div class="code-step-head">
+              <span class="step">1</span>
+              <div>
+                <h3>Get Video Transcription</h3>
+                <p>
+                  Extract audio and obtain timestamped Whisper transcriptions
+                  for clip-level segmentation.
+                </p>
+              </div>
+            </div>
+            <div class="code-step-body">
+            <div class="code-block">
+              <span class="code-label">Run</span>
+              <pre><code>python data_preprocess/get_raw_features/get_audio.py
+python data_preprocess/get_raw_features/get_transcription.py</code></pre>
+            </div>
+            <div class="code-block">
+              <span class="code-label">Output</span>
+              <pre><code>{video_id}.wav
+{video_id}.json  # segment id, start, end, text</code></pre>
+            </div>
+            </div>
+          </article>
+
+          <article>
+            <div class="code-step-head">
+              <span class="step">2</span>
+              <div>
+                <h3>Clip-Level Preprocessing</h3>
+                <p>
+                  Generate clip metadata, extract clip frames, and obtain OCR
+                  text for each clip.
+                </p>
+              </div>
+            </div>
+            <div class="code-step-body">
+            <div class="code-block">
+              <span class="code-label">Run</span>
+              <pre><code>python data_preprocess/get_raw_features/get_video_clip.py
+python data_preprocess/get_raw_features/get_frame.py
+python data_preprocess/get_raw_features/get_ocr.py</code></pre>
+            </div>
+            <div class="code-block">
+              <span class="code-label">Output</span>
+              <pre><code>{video_id}/
+  clipinfo.json
+  clip_000/
+    frames/frame_40/
+    frames/frame_60/
+    frames/frame_80/
+    frames/frame_100/
+    frames/frame_120/
+    ocr_text/ocr_clip.json</code></pre>
+            </div>
+            </div>
+          </article>
+
+          <article>
+            <div class="code-step-head">
+              <span class="step">3</span>
+              <div>
+                <h3>Generate VLM Rationales</h3>
+                <p>
+                  Sample frames for VLM reasoning and generate video-level
+                  rationales.
+                </p>
+              </div>
+            </div>
+            <div class="code-step-body">
+            <div class="code-block">
+              <span class="code-label">Run</span>
+              <pre><code>python data_preprocess/get_raw_features/get_frames_for_rationale.py
+python data_preprocess/get_raw_features/get_rationale_qwen.py
+python data_preprocess/get_raw_features/get_rationale_llava.py</code></pre>
+            </div>
+            <div class="code-block">
+              <span class="code-label">Output</span>
+              <pre><code>VLM rationale
+  objective summary
+  visual description
+  textual description
+  cross-modal relation
+  contextually important elements
+  final decision
+  reasons
+  notes</code></pre>
+            </div>
+            </div>
+          </article>
+
+          <article>
+            <div class="code-step-head">
+              <span class="step">4</span>
+              <div>
+                <h3>Extract Video Embeddings</h3>
+                <p>
+                  Encode audio, visual, transcript, OCR, and rationale
+                  information into a per-video feature file.
+                </p>
+              </div>
+            </div>
+            <div class="code-step-body">
+            <div class="code-block">
+              <span class="code-label">Run</span>
+              <pre><code>python data_preprocess/extract_video_emb.py</code></pre>
+            </div>
+            <div class="code-block">
+              <span class="code-label">Output</span>
+              <pre><code>{video_id}.pt
+  T clips
+    audio      -> [T, 1280]
+    visual     -> [T, 768]
+    transcript -> [T, D]
+    OCR        -> [T, D]
+  VLM rationale -> [8, D]</code></pre>
+            </div>
+            </div>
+          </article>
+
+          <article>
+            <div class="code-step-head">
+              <span class="step">5</span>
+              <div>
+                <h3>Train and Evaluate</h3>
+                <p>
+                  Load precomputed embeddings, train CLARA, and evaluate
+                  performance on the test split.
+                </p>
+              </div>
+            </div>
+            <div class="code-step-body single">
+            <div class="code-block">
+              <span class="code-label">Run</span>
+              <pre><code>bash run_clara.sh</code></pre>
+            </div>
+            </div>
+          </article>
+        </div>
+
+      </section>
+
+      <section id="datasets" class="section">
+        <h2>Datasets</h2>
+        <p>
+          CLARA is evaluated on public hateful video detection benchmarks.
+          Please obtain each dataset from its original repository.
+        </p>
+
+        <div class="dataset-links">
+          <p><strong>HateMM:</strong> <a href="https://github.com/hate-alert/HateMM">https://github.com/hate-alert/HateMM</a></p>
+          <p><strong>MultiHateClip:</strong> <a href="https://github.com/Social-AI-Studio/MultiHateClip">https://github.com/Social-AI-Studio/MultiHateClip</a></p>
+          <p><strong>DeHate:</strong> <a href="https://github.com/Multimodal-Intelligence-Lab-MIL/DeHate">https://github.com/Multimodal-Intelligence-Lab-MIL/DeHate</a></p>
+        </div>
+      </section>
+
+      <section id="citation" class="section citation-block">
+        <h2>Citation</h2>
+        <p>
+          Please cite the paper if you use CLARA or build on this repository.
+        </p>
+        <pre><code>@inproceedings{zhang2026clara,
+  title = {CLARA: Clip-Level Multimodal Alignment with VLM-Derived Rationales for Hateful Video Detection},
+  author = {Zhang, Yuchen and Dai, Shuang and Fu, Zeyu and Long, Yunfei and Shekhar, Ravi and Mouratidis, Haralambos},
+  booktitle = {Proceedings of the 34th ACM International Conference on Multimedia},
+  pages = {1--9},
+  year = {2026},
+  doi = {10.1145/3767308.3836438}
+}</code></pre>
+      </section>
+    </main>
+  </body>
+</html>
