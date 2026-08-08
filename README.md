@@ -34,13 +34,18 @@ CLARA/
 │   │   ├── get_rationale_llava.py
 │   │   ├── get_rationale_qwen.py
 │   │   ├── get_transcription.py
-│   │   ├── get_video_clip.py
-│   ├── extract_video_emb.py
+│   │   └── get_video_clip.py
+│   └── extract_video_emb.py
+├── data_splits/
+│   ├── DeHate_5folds.json
+│   ├── HateMM_5folds.json
+│   ├── MHC_CN_5folds.json
+│   └── MHC_EN_5folds.json
 ├── model/
 ├── utils/
 ├── main.py
 ├── run_clara.sh
-├── README.md
+└── README.md
 ```
 
 ---
