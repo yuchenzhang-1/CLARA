@@ -8,7 +8,7 @@ This is the official implementation of **CLARA**: Clip-Level Multimodal Alignmen
 
 <div align="center">
 
-## Open the CLARA Project Page
+## CLARA Project Page
 
 <a href="https://yuchenzhang-1.github.io/CLARA/">
   <img src="https://img.shields.io/badge/CLICK%20HERE%20TO%20VIEW%20THE%20PROJECT%20PAGE-CLARA-bb3e4a?style=for-the-badge&labelColor=111820" height="56">
