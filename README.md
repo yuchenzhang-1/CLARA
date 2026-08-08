@@ -16,6 +16,16 @@ This is the official implementation of **CLARA**: Clip-Level Multimodal Alignmen
 
 </div>
 
+
+<div align="center">
+
+# [View the Full CLARA Project Page](https://yuchenzhang-1.github.io/CLARA/)
+
+</div>
+
+
+
+
 ---
 ##  Project Structure
 
