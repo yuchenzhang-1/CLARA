@@ -4,32 +4,14 @@
 
 This is the official implementation of **CLARA**: Clip-Level Multimodal Alignment with VLM-Derived Rationales for Hateful Video Detection. The paper has been accepted at ACM Multimedia 2026.
 
-<p align="center">
-  <a href="https://yuchenzhang-1.github.io/CLARA/"><b>Project Page</b></a> ·
-  <a href="docs/CLARA_camera_ready.pdf"><b>Paper</b></a> ·
-  <a href="https://github.com/yuchenzhang-1/CLARA"><b>Code</b></a> ·
-  <a href="#pipeline"><b>Pipeline</b></a> ·
-  <a href="#datasets"><b>Datasets</b></a>
-</p>
+<div align="center">
 
-> **Content note:** this repository supports research on hateful video detection. Please follow the original dataset licenses, platform terms, and ethical review constraints when using the data and supplementary examples.
+<a href="https://yuchenzhang-1.github.io/CLARA/">
+  <img height="72" src="https://img.shields.io/badge/CLICK%20HERE%20TO%20VIEW%20THE%20PROJECT%20PAGE-CLARA-bb3e4a?style=for-the-badge&labelColor=111820">
+</a>
 
----
+</div>
 
-## Overview
-
-CLARA consists of three key components:
-
-- **Clip-level MoE-based Multimodal Encoding**  
-  Flexible alignment of audio, visual, and textual modalities.
-
-- **Local–Global Contrastive Learning**  
-  Captures temporal consistency between short and long segments.
-
-- **Rationale-Guided Transformer**  
-  Enhances semantic understanding using VLM-generated rationales.
-
----
 
 ##  Project Structure
 
@@ -55,7 +37,7 @@ CLARA/
 ├── utils/
 ├── main.py
 ├── run_clara.sh
-├── Supplementary_Material.pdf
+├── docs/
 └── README.md
 ```
 
